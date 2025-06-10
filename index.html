@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Heroku Stack Dəyiş</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+    input, select, button { display: block; margin: 10px 0; padding: 8px; width: 100%; }
+    #output { margin-top: 20px; white-space: pre-wrap; background: #fff; padding: 10px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h2>Heroku Stack Dəyiş</h2>
+
+  <input type="text" id="api_key" placeholder="Heroku API Key" />
+  <input type="text" id="app_name" placeholder="App adı" />
+  <select id="stack">
+    <option value="heroku-22">heroku-22</option>
+    <option value="heroku-20">heroku-20</option>
+    <option value="heroku-18">heroku-18</option>
+  </select>
+
+  <button onclick="changeStack()">Stack-i Dəyiş</button>
+
+  <div id="output"></div>
+
+  <script>
+    async function changeStack() {
+      const apiKey = document.getElementById("api_key").value.trim();
+      const appName = document.getElementById("app_name").value.trim();
+      const stack = document.getElementById("stack").value;
+      const output = document.getElementById("output");
+
+      if (!apiKey || !appName) {
+        output.textContent = "⚠️ API Key və App adı boş olmamalıdır!";
+        return;
+      }
+
+      output.textContent = "⏳ Gözləyin...";
+
+      try {
+        const res = await fetch(`https://api.heroku.com/apps/${appName}`, {
+          method: "PATCH",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+            "Accept": "application/vnd.heroku+json; version=3"
+          },
+          body: JSON.stringify({ build_stack: stack })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          output.textContent = `❌ Xəta:\n${JSON.stringify(data, null, 2)}`;
+        } else {
+          output.textContent = `✅ Uğurla dəyişdirildi!\nYeni stack: ${data.build_stack.name}`;
+        }
+      } catch (err) {
+        output.textContent = "❌ Xəta: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
